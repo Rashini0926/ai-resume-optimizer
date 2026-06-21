@@ -23,9 +23,9 @@ database, testing, and DevOps skills end-to-end.
 ## Roadmap
 
 - [x] Phase 0 — Project setup
-- [ ] Phase 1 — Backend skeleton
-- [ ] Phase 2 — Frontend skeleton
-- [ ] Phase 3 — CV upload + AI scoring (core feature)
+- [x] Phase 1 — Backend skeleton (Express + TypeScript)
+- [x] Phase 2 — Frontend skeleton (React + TypeScript)
+- [x] Phase 3 — CV upload + AI scoring (core feature) ✅ Live: resume analysis with ATS scoring
 - [ ] Phase 4 — Auth + database (application tracker)
 - [ ] Phase 5 — Testing suite
 - [ ] Phase 6 — CI/CD + live deployment
