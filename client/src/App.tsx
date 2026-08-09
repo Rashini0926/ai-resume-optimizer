@@ -17,15 +17,24 @@ function App() {
       const response = await fetch('http://localhost:5000/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resumeText, jobDescription }),
+        body: JSON.stringify({
+          resumeText,
+          jobDescription,
+          userId: 'user-1',
+          industry: 'Software Development',
+          jobRole: 'Software Engineer',
+        }),
       });
 
-      if (!response.ok) throw new Error('Analysis failed');
+      if (!response.ok) {
+        const errData = await response.json().catch(() => null);
+        throw new Error(errData?.error || 'Analysis failed. Please try again.');
+      }
 
       const data: AnalysisResult = await response.json();
       setResult(data);
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
+    } catch (err: any) {
+      setError(err?.message || 'Something went wrong. Please try again.');
     } finally {
       setIsLoading(false);
     }
