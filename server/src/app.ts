@@ -4,6 +4,7 @@ import healthRoutes from './routes/health';
 import analyzeRoutes from './routes/analyze';
 import authRoutes from './routes/auth';
 import analyticsRoutes from './routes/analytics';
+import historyRoutes from './routes/history';
 
 const app = express();
 
@@ -14,5 +15,6 @@ app.use('/api/health', healthRoutes);
 app.use('/api/analyze', analyzeRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/history', historyRoutes);
 
 export default app;

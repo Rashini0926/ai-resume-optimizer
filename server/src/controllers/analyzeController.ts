@@ -90,6 +90,11 @@ ${jobDescription}`;
       return res.status(502).json({ error: error.message });
     }
 
-    return res.status(500).json({ error: 'Failed to analyze resume' });
+    const message = error instanceof Error ? error.message : 'Unknown analysis error';
+    return res.status(500).json({
+      error: process.env.NODE_ENV === 'development'
+        ? `Failed to analyze resume: ${message}`
+        : 'Failed to analyze resume',
+    });
   }
-};
+};

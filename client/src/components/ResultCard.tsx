@@ -1,36 +1,8 @@
-import type { AnalysisResult } from '../types';
-
-interface ResultCardProps {
-  result: AnalysisResult;
-}
-
+import type { AnalysisResult } from "../types";
+interface ResultCardProps { result: AnalysisResult; }
+const scoreTone = (score: number) => score >= 75 ? "good" : score >= 50 ? "medium" : "low";
 function ResultCard({ result }: ResultCardProps) {
-  return (
-    <div>
-      <h2>ATS Score: {result.atsScore}/100</h2>
-
-      <h3>✅ Matched Keywords</h3>
-      <ul>
-        {result.matchedKeywords.map((keyword) => (
-          <li key={keyword}>{keyword}</li>
-        ))}
-      </ul>
-
-      <h3>❌ Missing Keywords</h3>
-      <ul>
-        {result.missingKeywords.map((keyword) => (
-          <li key={keyword}>{keyword}</li>
-        ))}
-      </ul>
-
-      <h3>💡 Suggestions</h3>
-      <ul>
-        {result.suggestions.map((suggestion, index) => (
-          <li key={index}>{suggestion}</li>
-        ))}
-      </ul>
-    </div>
-  );
+  const score = Math.max(0, Math.min(100, result.atsScore));
+  return <div className="results-grid"><article className={`result-card score-card ${scoreTone(score)}`}><p className="card-label">ATS compatibility</p><div className="score-ring" style={{ "--score": `${score * 3.6}deg` } as React.CSSProperties}><div><strong>{score}</strong><span>out of 100</span></div></div><p className="score-summary">{score >= 75 ? "Strong alignment" : score >= 50 ? "Good foundation" : "Needs improvement"}</p></article><article className="result-card"><div className="result-title"><span className="title-icon matched">✓</span><div><h3>Matched keywords</h3><p>Terms already reflected in your resume</p></div></div><div className="badges">{result.matchedKeywords.length ? result.matchedKeywords.map((keyword, index) => <span className="badge badge-match" key={`${keyword}-${index}`}>{keyword}</span>) : <span className="muted">No matched keywords found.</span>}</div></article><article className="result-card"><div className="result-title"><span className="title-icon missing">+</span><div><h3>Missing keywords</h3><p>Terms to consider adding where relevant</p></div></div><div className="badges">{result.missingKeywords.length ? result.missingKeywords.map((keyword, index) => <span className="badge badge-missing" key={`${keyword}-${index}`}>{keyword}</span>) : <span className="muted">No missing keywords found.</span>}</div></article><article className="result-card suggestions-card"><div className="result-title"><span className="title-icon idea">✦</span><div><h3>Recommendations</h3><p>Practical ways to improve your application</p></div></div><div className="suggestions">{result.suggestions.length ? result.suggestions.map((suggestion, index) => <div className="suggestion" key={index}><span aria-hidden="true">↗</span><p>{suggestion}</p></div>) : <span className="muted">No additional suggestions right now.</span>}</div></article></div>;
 }
-
 export default ResultCard;

@@ -1,49 +1,74 @@
-import { useState } from 'react';
+import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
 interface AnalyzeFormProps {
   onSubmit: (resumeText: string, jobDescription: string) => void;
   isLoading: boolean;
 }
 
-function AnalyzeForm({ onSubmit, isLoading }: AnalyzeFormProps) {
-  const [resumeText, setResumeText] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
+const extractPdfText = async (file: File) => {
+  const document = await getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const pages = await Promise.all(Array.from({ length: document.numPages }, async (_, index) => {
+    const page = await document.getPage(index + 1);
+    const content = await page.getTextContent();
+    return content.items.map((item) => "str" in item ? item.str : "").join(" ");
+  }));
+  return pages.join("\n\n").trim();
+};
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!resumeText.trim() || !jobDescription.trim()) return;
-    onSubmit(resumeText, jobDescription);
+function AnalyzeForm({ onSubmit, isLoading }: AnalyzeFormProps) {
+  const [resumeText, setResumeText] = useState("");
+  const [jobDescription, setJobDescription] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [uploadError, setUploadError] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const isBusy = isLoading || isExtracting;
+
+  const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadError("");
+    if (file.type !== "application/pdf") {
+      setUploadError("Please choose a PDF file.");
+      event.target.value = "";
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("Please choose a PDF smaller than 10 MB.");
+      event.target.value = "";
+      return;
+    }
+    setIsExtracting(true);
+    try {
+      const extractedText = await extractPdfText(file);
+      if (!extractedText) throw new Error("No selectable text was found in this PDF.");
+      setResumeText(extractedText);
+      setFileName(file.name);
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : "Unable to read this PDF. Please paste your resume text instead.");
+      setFileName("");
+      event.target.value = "";
+    } finally {
+      setIsExtracting(false);
+    }
   };
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <label>
-        Your Resume Text
-        <textarea
-          value={resumeText}
-          onChange={(e) => setResumeText(e.target.value)}
-          rows={8}
-          placeholder="Paste your resume content here..."
-          required
-        />
-      </label>
+  const clearFile = () => {
+    setFileName("");
+    setResumeText("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
-      <label>
-        Job Description
-        <textarea
-          value={jobDescription}
-          onChange={(e) => setJobDescription(e.target.value)}
-          rows={8}
-          placeholder="Paste the job description here..."
-          required
-        />
-      </label>
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (resumeText.trim() && jobDescription.trim()) onSubmit(resumeText, jobDescription);
+  };
 
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? 'Analyzing...' : 'Analyze Resume'}
-      </button>
-    </form>
-  );
+  return <section className="analysis-card"><div className="card-heading"><div className="heading-icon" aria-hidden="true">✦</div><div><h2>Start your analysis</h2><p>Upload a CV PDF or paste your resume, then add the target job description.</p></div></div><form className="analysis-form" onSubmit={handleSubmit}><div className="form-grid"><div className="resume-field"><div className="field-label">Your resume</div><input ref={fileInputRef} id="resume-pdf" className="file-input" type="file" accept="application/pdf,.pdf" onChange={(event) => void handleFileChange(event)} disabled={isBusy} /><label className="upload-zone" htmlFor="resume-pdf"><span className="upload-icon" aria-hidden="true">↑</span><span><strong>{isExtracting ? "Reading your PDF…" : "Upload CV as PDF"}</strong><small>PDF only · maximum 10 MB</small></span></label>{fileName && <div className="uploaded-file"><span aria-hidden="true">✓</span><span>{fileName}</span><button type="button" onClick={clearFile} disabled={isBusy}>Remove</button></div>}{uploadError && <p className="field-error" role="alert">{uploadError}</p>}<label className="paste-label" htmlFor="resume-text">Or paste resume text<textarea id="resume-text" value={resumeText} onChange={(event) => { setResumeText(event.target.value); setFileName(""); }} rows={7} placeholder="Paste your resume content here..." required disabled={isBusy} /></label></div><label>Job description<textarea value={jobDescription} onChange={(event) => setJobDescription(event.target.value)} rows={15} placeholder="Paste the target job description here..." required disabled={isBusy} /></label></div><button className="analyze-button" type="submit" disabled={isBusy}>{isLoading ? <><span className="spinner" aria-hidden="true" /> Analyzing your resume…</> : isExtracting ? <><span className="spinner" aria-hidden="true" /> Preparing your CV…</> : <>Analyze Resume <span aria-hidden="true">→</span></>}</button></form></section>;
 }
 
 export default AnalyzeForm;
