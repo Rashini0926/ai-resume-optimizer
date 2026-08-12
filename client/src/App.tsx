@@ -16,7 +16,7 @@ function App() {
   const loadHistory = async () => {
     try {
       const response = await fetch(`${API_URL}/history`);
-      if (!response.ok) throw new Error("Unable to load analysis history");
+      if (!response.ok) throw new Error(`Unable to load analysis history (${response.status})`);
       const data: HistoryItem[] | { data?: HistoryItem[] } = await response.json();
       setHistory(Array.isArray(data) ? data : data.data ?? []);
     } catch (loadError) {
@@ -45,8 +45,9 @@ function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ resumeText, jobDescription, userId: "user-1", industry: "Software Development", jobRole: "Software Engineer" }),
       });
-      if (!response.ok) throw new Error("Analysis failed. Please try again.");
-      setResult(await response.json() as AnalysisResult);
+      const data = await response.json() as AnalysisResult | { error?: string };
+      if (!response.ok) throw new Error('error' in data ? data.error : "Analysis failed. Please try again.");
+      setResult(data as AnalysisResult);
       await loadHistory();
     } catch (requestError: unknown) {
       setError(requestError instanceof Error ? requestError.message : "Something went wrong. Please try again.");

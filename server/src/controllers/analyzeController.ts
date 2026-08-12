@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { genAI } from '../config/gemini';
 import { AnalyzeRequestBody, GeminiResult } from '../config/types';
-import { createAnalyticsEvent } from './analyticsController';
+import ResumeAnalysis from '../models/ResumeAnalysis';
 
 const parseGeminiResponse = (text: string): GeminiResult => {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -68,9 +68,8 @@ ${jobDescription}`;
     const result = parseGeminiResponse(rawText);
 
     try {
-      await createAnalyticsEvent({
+      const savedAnalysis = await ResumeAnalysis.create({
         userId,
-        eventType: 'resume_analysis',
         industry,
         jobRole,
         atsScore: result.atsScore,
@@ -78,8 +77,11 @@ ${jobDescription}`;
         missingKeywords: result.missingKeywords,
         suggestions: result.suggestions,
       });
-    } catch (analyticsError) {
-      console.error('Failed to log analytics event:', analyticsError);
+      console.info(`Resume analysis saved: ${savedAnalysis.id}`);
+    } catch (saveError) {
+      // A successful analysis must not be presented as saved when persistence fails.
+      console.error('Failed to save resume analysis:', saveError);
+      return res.status(500).json({ error: 'Analysis completed, but it could not be saved to history' });
     }
 
     return res.status(200).json(result);

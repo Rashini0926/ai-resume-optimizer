@@ -7,11 +7,13 @@ router.get('/', async (_req, res) => {
   try {
     const history = await ResumeAnalysis.find()
       .sort({ createdAt: -1 })
-      .limit(20);
+      .limit(50)
+      .lean();
 
-    res.json(history);
+    return res.status(200).json(history);
   } catch (error) {
-    res.status(500).json({
+    console.error('Failed to fetch resume analysis history:', error);
+    return res.status(500).json({
       error: 'Failed to fetch history',
     });
   }
