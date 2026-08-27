@@ -1,172 +1,306 @@
 # AI Resume Optimizer with Analytics Dashboard
 
-## Project Overview
+AI Resume Optimizer is a full-stack web application that compares a candidate's resume with a target job description using Google Gemini AI. It generates an ATS compatibility score, detects matched and missing keywords, recommends improvements, and helps authenticated users create a personalized cover letter.
 
-AI Resume Optimizer is a full-stack web application that analyzes resumes against job descriptions using Google Gemini AI and provides ATS (Applicant Tracking System) optimization insights.
+The application also records authenticated resume-analysis events in MongoDB Atlas and presents personal progress through an in-app analytics dashboard. A separate Power BI dashboard supports broader reporting and portfolio demonstrations.
 
-The system evaluates resume content, identifies matching and missing keywords, calculates ATS scores, and generates improvement suggestions. Additionally, it includes an Analytics Layer built with MongoDB Atlas Charts and Power BI concepts to visualize resume analysis trends and user behavior.
+## Key Features
 
----
+### Guest Resume Analysis
 
-## Features
+- Upload a PDF resume of up to 10 MB
+- Extract selectable text from the PDF in the browser
+- Paste or edit resume text manually
+- Paste a target job description
+- Analyze a resume without creating an account
+- Generate an AI-powered ATS score from 0 to 100
+- Identify matched and missing keywords
+- Receive practical resume-improvement suggestions
 
-### Resume Analysis
-- Upload or paste resume content
-- Paste target job description
-- AI-powered ATS score generation
-- Keyword matching analysis
-- Missing skill identification
-- Personalized improvement suggestions
+### Authentication and User Data
 
-### Analytics Tracking
-- Store resume analysis events in MongoDB Atlas
+- Register and sign in using email and password
+- JWT-based API authentication
+- Password hashing with bcrypt
+- Restore and validate existing user sessions
+- Protect personal history, analytics, and cover-letter endpoints
+- Keep every user's stored data isolated
+
+### Resume History
+
+- Save analyses completed by authenticated users
+- Display the latest 50 analyses
+- Track job role, industry, ATS score, and completion date
+- Keep guest analyses temporary and out of user history
+
+### Cover Letter Generation
+
+- Complete resume analysis before requesting a cover letter
+- Ask guest users to sign in only when they choose to generate a letter
+- Restore the pending analysis after login or registration
+- Generate Professional, Enthusiastic, Formal, or Friendly letters
+- Edit the generated content
+- Copy the completed letter to the clipboard
+- Backend support for saving, listing, viewing, and deleting cover letters
+
+### Personal Analytics
+
+- Protected analytics dashboard for signed-in users
+- Total completed analysis count
+- Average ATS score
+- Best monthly average score
+- Monthly ATS score trend chart
+- User-scoped analytics queries to prevent cross-user access
+
+### Power BI and MongoDB Analytics
+
+- Store authenticated analysis events in MongoDB Atlas
+- Prepare analytics data for MongoDB Atlas Charts and Power BI
 - Track ATS scores over time
-- Monitor job-role-based performance
-- Analyze keyword matching trends
-- Generate analytics dashboards
+- Compare resume performance by job role and industry
+- Explore matched and missing keyword trends
+- Open the external Power BI report from the authenticated dashboard
 
-### Authentication
-- JWT Authentication
-- Secure API endpoints
-- User session management
+## Application Flow
 
----
+```text
+Upload PDF or paste resume
+          │
+          ▼
+Paste target job description
+          │
+          ▼
+Gemini ATS analysis
+          │
+          ├── Guest user ──► View results
+          │                       │
+          │                       ▼
+          │                Request cover letter
+          │                       │
+          │                       ▼
+          │                  Login / Register
+          │                       │
+          │                       ▼
+          │              Restore analysis context
+          │
+          └── Signed-in user ──► Save history and analytics event
+                                  │
+                                  ▼
+                         Generate cover letter
+```
 
 ## Tech Stack
 
 ### Frontend
-- React
+
+- React 19
 - TypeScript
 - Vite
-- Axios
+- React Router
+- PDF.js (`pdfjs-dist`)
+- jsPDF
+- Native Fetch API
+- CSS
 
 ### Backend
+
 - Node.js
-- Express.js
+- Express.js 5
 - TypeScript
+- JSON Web Tokens
+- bcrypt
 
 ### Database
+
 - MongoDB Atlas
 - Mongoose
 
 ### AI Integration
+
 - Google Gemini AI
+- `gemini-2.5-flash`
+- Google Gen AI SDK
 
 ### Analytics
-- MongoDB Atlas Charts
-- Power BI Dashboard Concepts
 
----
+- In-app React analytics dashboard
+- MongoDB Atlas analytics collections
+- MongoDB Atlas Charts concepts
+- Microsoft Power BI
 
 ## Project Structure
 
 ```text
 ai-resume-optimizer/
-│
 ├── client/
+│   ├── public/
 │   ├── src/
-│   ├── components/
-│   ├── services/
-│   └── pages/
-│
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── AnalyzeForm.tsx
+│   │   │   ├── CoverLetterGenerator.tsx
+│   │   │   ├── HistoryTable.tsx
+│   │   │   ├── ProtectedRoute.tsx
+│   │   │   └── ResultCard.tsx
+│   │   ├── context/
+│   │   │   └── AuthContext.tsx
+│   │   ├── pages/
+│   │   │   ├── Analytics.tsx
+│   │   │   ├── Login.tsx
+│   │   │   └── Register.tsx
+│   │   ├── App.tsx
+│   │   ├── App.css
+│   │   ├── main.tsx
+│   │   └── types.ts
+│   ├── .env.example
+│   └── package.json
 ├── server/
 │   ├── src/
 │   │   ├── config/
 │   │   ├── controllers/
+│   │   ├── middleware/
 │   │   ├── models/
 │   │   ├── routes/
-│   │   ├── middleware/
+│   │   ├── utils/
+│   │   ├── app.ts
 │   │   └── index.ts
-│   │
 │   ├── .env
-│   └── package.json
-│
+│   ├── package.json
+│   └── tsconfig.json
+├── docs/
+│   └── screenshots/
 └── README.md
 ```
 
----
-
 ## Environment Variables
 
-Create a `.env` file inside the server folder.
+Create `server/.env`:
 
 ```env
 PORT=5000
 NODE_ENV=development
 
+MONGODB_URI=YOUR_MONGODB_ATLAS_CONNECTION_STRING
 GEMINI_API_KEY=YOUR_GEMINI_API_KEY
 
-MONGODB_URI=mongodb://USERNAME:PASSWORD@HOST1:27017,HOST2:27017,HOST3:27017/ai-resume-optimizer?ssl=true&replicaSet=atlas-1020mw-shard-0&authSource=admin&retryWrites=true&w=majority&appName=Cluster0
+JWT_SECRET=REPLACE_WITH_A_LONG_RANDOM_SECRET
+JWT_EXPIRES_IN=7d
 ```
 
----
+Optionally create `client/.env` by copying `client/.env.example`:
 
-## Installation
+```env
+VITE_API_URL=http://localhost:5000
+```
 
-### Clone Repository
+Never commit real database credentials, Gemini API keys, or JWT secrets.
+
+## Installation and Local Development
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Rashini0926/ai-resume-optimizer.git
 cd ai-resume-optimizer
 ```
 
-### Backend Setup
+### 2. Install and run the backend
 
 ```bash
 cd server
-
 npm install
-
 npm run dev
 ```
 
-Expected Output:
+Expected output:
 
-```bash
+```text
 MongoDB connected successfully
 Server running on port 5000
 ```
 
-### Frontend Setup
+### 3. Install and run the frontend
+
+Open a second terminal:
 
 ```bash
 cd client
-
 npm install
-
 npm run dev
 ```
 
-Frontend runs on:
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:5000`
+- Health check: `http://localhost:5000/api/health`
 
-```text
-http://localhost:5173
+## Available Scripts
+
+### Client
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run preview
 ```
 
-Backend runs on:
+### Server
 
-```text
-http://localhost:5000
+```bash
+npm run dev
+npm run build
+npm start
 ```
 
----
+## API Reference
 
-## API Endpoints
-
-### Analyze Resume
-
-**POST**
+Endpoints marked **Protected** require this header:
 
 ```http
-/api/analyze
+Authorization: Bearer YOUR_JWT_TOKEN
 ```
+
+### Health
+
+```http
+GET /api/health
+```
+
+### Authentication
+
+```http
+POST /api/auth/register
+POST /api/auth/login
+GET  /api/auth/me               # Protected
+```
+
+Register request:
+
+```json
+{
+  "name": "Example User",
+  "email": "user@example.com",
+  "password": "secure-password",
+  "confirmPassword": "secure-password"
+}
+```
+
+### Resume Analysis
+
+```http
+POST /api/analyze
+```
+
+Authentication is optional. Authenticated analyses are saved to history and analytics; guest analyses only return the result.
 
 Request:
 
 ```json
 {
-  "resumeText": "Resume Content",
-  "jobDescription": "Job Description"
+  "resumeText": "Resume content",
+  "jobDescription": "Target job description",
+  "industry": "Software Development",
+  "jobRole": "Software Engineer"
 }
 ```
 
@@ -174,137 +308,151 @@ Response:
 
 ```json
 {
-  "atsScore": 67,
-  "matchedKeywords": [],
-  "missingKeywords": [],
-  "suggestions": []
+  "atsScore": 78,
+  "matchedKeywords": ["React", "TypeScript", "Node.js"],
+  "missingKeywords": ["Docker", "Kubernetes"],
+  "suggestions": [
+    "Add relevant Docker experience",
+    "Include measurable project outcomes"
+  ]
 }
 ```
 
----
+### Resume History
 
-## Analytics Data Model
-
-Collection:
-
-```text
-analyticsevents
+```http
+GET /api/history              # Protected
 ```
 
-Example Document:
+### Personal Analytics
+
+```http
+GET /api/analytics/summary       # Protected
+GET /api/analytics/trends        # Protected
+GET /api/analytics/user/:userId  # Protected and owner-only
+```
+
+### Cover Letters
+
+```http
+POST   /api/cover-letter/generate  # Protected
+POST   /api/cover-letter/save      # Protected
+GET    /api/cover-letter           # Protected
+GET    /api/cover-letter/:id       # Protected
+DELETE /api/cover-letter/:id       # Protected
+```
+
+Generate request using the current analysis result:
 
 ```json
 {
-  "userId": "user-1",
-  "eventType": "resume_analysis",
-  "industry": "Software Development",
-  "jobRole": "Software Engineer",
-  "atsScore": 67,
-  "matchedKeywords": [
-    "React",
-    "TypeScript",
-    "Node.js"
-  ],
-  "missingKeywords": [
-    "Docker",
-    "Kubernetes"
-  ],
-  "suggestions": [
-    "Add Docker experience",
-    "Mention CI/CD workflows"
-  ],
-  "createdAt": "2026-08-11T17:55:05.989Z"
+  "analysis": {
+    "atsScore": 78,
+    "matchedKeywords": ["React", "TypeScript"],
+    "missingKeywords": ["Docker"],
+    "suggestions": ["Add relevant Docker experience"]
+  },
+  "jobDescription": "Target job description",
+  "tone": "Professional"
 }
 ```
 
----
+## Analytics Data Model
 
-## MongoDB Atlas Charts
+Authenticated analysis events are stored in the `analyticsevents` collection.
 
-Implemented Dashboards:
+```json
+{
+  "userId": "USER_OBJECT_ID",
+  "eventType": "resume_analysis",
+  "industry": "Software Development",
+  "jobRole": "Software Engineer",
+  "atsScore": 78,
+  "matchedKeywords": ["React", "TypeScript", "Node.js"],
+  "missingKeywords": ["Docker", "Kubernetes"],
+  "suggestions": ["Add relevant Docker experience"],
+  "createdAt": "2026-08-27T10:30:00.000Z"
+}
+```
 
-### 1. Average ATS Score by Job Role
+Guest analyses are not persisted in this collection.
 
-Purpose:
+## Analytics Dashboards
 
-- Compare ATS performance across job roles
-- Identify high-performing resume categories
+### In-App Personal Analytics
 
-Metrics:
+The protected React analytics page displays:
 
-- X-Axis → Job Role
-- Y-Axis → Average ATS Score
+- Total analyses completed by the current user
+- Average ATS score
+- Best monthly average score
+- Monthly ATS score trend
 
----
+### MongoDB Atlas Charts
 
-### 2. ATS Score Trend Over Time
+Suggested Atlas charts include:
 
-Purpose:
+1. Average ATS score by job role
+2. ATS score trend over time
+3. Analysis count by industry
+4. Frequently matched keywords
+5. Frequently missing keywords
 
-- Track ATS score improvements
-- Monitor optimization progress
+### Power BI Dashboard
 
-Metrics:
+The Power BI report can be connected to MongoDB Atlas through the MongoDB Atlas SQL Interface or an exported analytics dataset. Recommended report visuals include:
 
-- X-Axis → Created Date
-- Y-Axis → Average ATS Score
+- KPI cards for total analyses, users, and average ATS score
+- ATS score trend over time
+- Average ATS score by job role
+- Industry-wise analysis volume
+- Matched keyword frequency
+- Missing keyword frequency
+- Resume optimization performance
+- Cover-letter generation activity
 
----
+#### Power BI Overview
 
-### 3. Keyword Match Analysis
+![Power BI dashboard overview](docs/screenshots/powerbi-dashboard-overview.png)
 
-Purpose:
+#### ATS Score Trends
 
-- Analyze keyword matching effectiveness
-- Identify frequently matched technologies
+![Power BI ATS score trends](docs/screenshots/powerbi-ats-trends.png)
 
-Metrics:
+#### Keyword and Job Role Analysis
 
-- X-Axis → Industry
-- Y-Axis → Count of Matched Keywords
+![Power BI keyword and job role analysis](docs/screenshots/powerbi-keyword-analysis.png)
 
----
+Add the exported Power BI screenshots to `docs/screenshots/` using the exact filenames shown above. Do not include connection strings, account details, email addresses, or other sensitive information in screenshots.
 
-## Power BI Integration Concept
+## Power BI Security Notes
 
-The analytics layer is designed for Power BI integration through MongoDB Atlas data exports.
+- A direct report URL does not automatically grant report access.
+- Power BI workspace permissions and licensing still apply.
+- URL filters are not a security mechanism.
+- Use Power BI Row-Level Security for user-specific embedded reports.
+- Keep the current external Power BI report as an admin or portfolio dashboard unless secure embedding is configured.
 
-Potential Power BI Dashboards:
+## Current Limitations
 
-- ATS Score Trends
-- User Growth Metrics
-- Resume Optimization Performance
-- Keyword Match Analytics
-- Industry-wise Resume Analysis
+- Scanned PDFs without selectable text require OCR and are not supported yet.
+- Industry and job role are currently supplied by the client using default values.
+- The client generates and edits cover letters, while the complete saved-letter management UI is still pending.
+- The Power BI report opens externally and is not yet securely embedded in the React application.
+- Automated frontend and backend tests have not yet been added.
+- The PDF worker increases the production bundle size and should be lazy-loaded in a future optimization.
 
----
+## Roadmap
 
-## Future Improvements
-
-- User authentication dashboard
-- Resume history tracking
-- Power BI live integration
-- Predictive ATS scoring
-- PDF resume upload support
-- Admin analytics dashboard
-- Real-time reporting
-
----
-
-## Sample Technologies Analyzed
-
-- React
-- TypeScript
-- Node.js
-- Express.js
-- MongoDB Atlas
-- Google Gemini AI
-- JWT
-- REST APIs
-- Power BI
-- Power Apps
-
----
+- Add editable industry and job-role fields
+- Add saved cover-letter management UI
+- Add DOCX and OCR resume support
+- Add resume comparison and progress reports
+- Add admin role and admin analytics dashboard
+- Configure secure Power BI embedding and Row-Level Security
+- Add automated unit and integration tests
+- Add rate limiting, request validation, and production security headers
+- Add CI/CD and deployment documentation
 
 ## Author
 
@@ -312,13 +460,8 @@ Potential Power BI Dashboards:
 
 BSc (Hons) Information Technology Undergraduate
 
-GitHub:
-https://github.com/Rashini0926
-
-LinkedIn:
-https://www.linkedin.com/in/rashini-wijesinghe/
-
----
+- [GitHub](https://github.com/Rashini0926)
+- [LinkedIn](https://www.linkedin.com/in/rashini-wijesinghe/)
 
 ## License
 
