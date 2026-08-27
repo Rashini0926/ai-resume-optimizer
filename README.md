@@ -12,6 +12,7 @@ The application also records authenticated resume-analysis events in MongoDB Atl
 - Extract selectable text from the PDF in the browser
 - Paste or edit resume text manually
 - Paste a target job description
+- Select the target industry and enter the job role
 - Analyze a resume without creating an account
 - Generate an AI-powered ATS score from 0 to 100
 - Identify matched and missing keywords
@@ -432,7 +433,6 @@ The Power BI report can be connected to MongoDB Atlas through the MongoDB Atlas 
 ## Current Limitations
 
 - Scanned PDFs without selectable text require OCR and are not supported yet.
-- Industry and job role are currently supplied by the client using default values.
 - The client generates and edits cover letters, while the complete saved-letter management UI is still pending.
 - The Power BI report opens externally and is not yet securely embedded in the React application.
 - Automated frontend and backend tests have not yet been added.
@@ -440,7 +440,6 @@ The Power BI report can be connected to MongoDB Atlas through the MongoDB Atlas 
 
 ## Roadmap
 
-- Add editable industry and job-role fields
 - Add saved cover-letter management UI
 - Add DOCX and OCR resume support
 - Add resume comparison and progress reports

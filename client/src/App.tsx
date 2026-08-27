@@ -60,7 +60,7 @@ function Dashboard() {
     }
   }, [isAuthenticated]);
 
-  const analyze = async (resumeText: string, targetJobDescription: string) => {
+  const analyze = async (resumeText: string, targetJobDescription: string, industry: string, jobRole: string) => {
     setIsLoading(true);
     setError('');
     setShowCoverLetter(false);
@@ -70,7 +70,7 @@ function Dashboard() {
       const response = await fetch(`${API_URL}/api/analyze`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ resumeText, jobDescription: targetJobDescription, industry: 'Software Development', jobRole: 'Software Engineer' }),
+        body: JSON.stringify({ resumeText, jobDescription: targetJobDescription, industry, jobRole }),
       });
       const data = await response.json() as AnalysisResult | { error?: string };
       if (!response.ok) throw new Error('error' in data ? data.error : 'Analysis failed');
