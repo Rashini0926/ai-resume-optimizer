@@ -28,6 +28,29 @@ h1, h2, h3, p { margin-top: 0; } h1, h2, h3 { font-family: Manrope, sans-serif; 
 .cover-letter-card select { width: min(100%, 280px); padding: 11px 12px; border: 1px solid #dfe4ec; border-radius: 10px; color: #243149; background: #fbfcfe; }
 .cover-letter-result { display: grid; gap: 8px; }
 .cover-letter-result .text-button { justify-self: start; }
+.letter-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.letter-actions .text-button, .letter-actions .danger-button { align-self: center; }
+.success-message { margin: 18px 0; padding: 14px 16px; border: 1px solid #bcebd7; border-radius: 12px; background: #effbf6; color: #187456; }
+.letter-library { display: grid; grid-template-columns: minmax(260px, .7fr) minmax(0, 1.5fr); gap: 20px; align-items: start; }
+.letter-list, .letter-editor { border: 1px solid #e7ebf2; border-radius: 18px; background: white; box-shadow: 0 12px 35px rgba(28,46,83,.07); }
+.letter-list { display: grid; overflow: hidden; }
+.letter-list-item { display: grid; gap: 6px; width: 100%; padding: 18px 20px; border-bottom: 1px solid #edf0f4; border-radius: 0; color: #344054; background: white; text-align: left; box-shadow: none; }
+.letter-list-item:last-child { border-bottom: 0; }
+.letter-list-item:hover, .letter-list-item.active { background: #f2f4ff; }
+.letter-list-item.active { box-shadow: inset 4px 0 #606dd7; }
+.letter-list-item span { font-weight: 800; }
+.letter-list-item small { color: #7b8699; }
+.letter-list-item p { margin: 3px 0 0; overflow: hidden; color: #667085; font-size: .8rem; font-weight: 400; line-height: 1.45; }
+.letter-editor { min-height: 360px; padding: 24px; }
+.letter-editor-heading { display: flex; justify-content: space-between; align-items: start; gap: 20px; margin-bottom: 18px; }
+.letter-editor-heading label { min-width: 170px; }
+.letter-editor select { padding: 10px 12px; border: 1px solid #dfe4ec; border-radius: 9px; background: #fbfcfe; }
+.letter-editor textarea { margin-bottom: 16px; }
+.letter-editor-empty { display: grid; min-height: 310px; place-content: center; color: #7b8699; text-align: center; }
+.letter-editor-empty p { margin-bottom: 4px; color: #4b5870; font-weight: 800; }
+.danger-button { padding: 8px 0; color: #bd3947; background: transparent; font-weight: 700; }
+.saved-letters-empty { border: 1px solid #e7ebf2; border-radius: 18px; background: white; }
+.saved-letters-empty .analyze-button { display: inline-flex; margin-top: 18px; color: white; text-decoration: none; }
 @media (max-width: 680px) { .cover-letter-cta { align-items: stretch; flex-direction: column; }.cover-letter-cta .analyze-button { width: 100%; } }
 .back-link { color: #5664d2; font-weight: 700; text-decoration: none; }
 .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
@@ -47,3 +70,4 @@ h1, h2, h3, p { margin-top: 0; } h1, h2, h3 { font-family: Manrope, sans-serif; 
 .analytics-empty { padding: 58px 20px 35px; color: #7b8699; text-align: center; }
 .analytics-empty p { margin-bottom: 5px; color: #4b5870; font-weight: 700; }
 @media (max-width: 680px) { .metric-grid { grid-template-columns: 1fr; }.trend-card { padding: 20px; } }
+@media (max-width: 800px) { .letter-library { grid-template-columns: 1fr; }.letter-editor-heading { flex-direction: column; }.letter-editor-heading label { width: 100%; }.letter-actions .analyze-button { width: 100%; } }

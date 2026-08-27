@@ -42,7 +42,10 @@ The application also records authenticated resume-analysis events in MongoDB Atl
 - Generate Professional, Enthusiastic, Formal, or Friendly letters
 - Edit the generated content
 - Copy the completed letter to the clipboard
-- Backend support for saving, listing, viewing, and deleting cover letters
+- Save generated cover letters to a personal library
+- View and edit previously saved letters
+- Download saved letters as PDF files
+- Delete saved letters with confirmation
 
 ### Personal Analytics
 
@@ -340,6 +343,7 @@ POST   /api/cover-letter/generate  # Protected
 POST   /api/cover-letter/save      # Protected
 GET    /api/cover-letter           # Protected
 GET    /api/cover-letter/:id       # Protected
+PATCH  /api/cover-letter/:id       # Protected
 DELETE /api/cover-letter/:id       # Protected
 ```
 
@@ -433,14 +437,12 @@ The Power BI report can be connected to MongoDB Atlas through the MongoDB Atlas 
 ## Current Limitations
 
 - Scanned PDFs without selectable text require OCR and are not supported yet.
-- The client generates and edits cover letters, while the complete saved-letter management UI is still pending.
 - The Power BI report opens externally and is not yet securely embedded in the React application.
 - Automated frontend and backend tests have not yet been added.
 - The PDF worker increases the production bundle size and should be lazy-loaded in a future optimization.
 
 ## Roadmap
 
-- Add saved cover-letter management UI
 - Add DOCX and OCR resume support
 - Add resume comparison and progress reports
 - Add admin role and admin analytics dashboard

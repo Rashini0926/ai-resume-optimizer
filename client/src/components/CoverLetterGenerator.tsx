@@ -15,6 +15,8 @@ export default function CoverLetterGenerator({ analysis, jobDescription, token }
   const [content, setContent] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const generate = async () => {
     setIsLoading(true);
@@ -28,6 +30,7 @@ export default function CoverLetterGenerator({ analysis, jobDescription, token }
       const data = await response.json() as { content?: string; error?: string };
       if (!response.ok || !data.content) throw new Error(data.error || 'Unable to generate cover letter');
       setContent(data.content);
+      setSaved(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to generate cover letter');
     } finally {
@@ -37,6 +40,25 @@ export default function CoverLetterGenerator({ analysis, jobDescription, token }
 
   const copy = async () => {
     await navigator.clipboard.writeText(content);
+  };
+
+  const save = async () => {
+    setIsSaving(true);
+    setError('');
+    try {
+      const response = await fetch(`${API_URL}/api/cover-letter/save`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ jobDescription, tone, content }),
+      });
+      const data = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(data.error || 'Unable to save cover letter');
+      setSaved(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to save cover letter');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return <section className="cover-letter-card">
@@ -55,8 +77,8 @@ export default function CoverLetterGenerator({ analysis, jobDescription, token }
     </button>
     {error && <div className="error-message">{error}</div>}
     {content && <div className="cover-letter-result">
-      <textarea aria-label="Generated cover letter" value={content} onChange={(event) => setContent(event.target.value)} rows={18} />
-      <button className="text-button" type="button" onClick={() => void copy()}>Copy to clipboard</button>
+      <textarea aria-label="Generated cover letter" value={content} onChange={(event) => { setContent(event.target.value); setSaved(false); }} rows={18} />
+      <div className="letter-actions"><button className="analyze-button" type="button" onClick={() => void save()} disabled={isSaving || saved}>{isSaving ? 'Saving…' : saved ? 'Saved' : 'Save cover letter'}</button><button className="text-button" type="button" onClick={() => void copy()}>Copy to clipboard</button></div>
     </div>}
   </section>;
 }

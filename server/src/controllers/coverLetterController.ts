@@ -54,14 +54,30 @@ export const generateCoverLetter = async (req: AuthRequest, res: Response) => {
 export const saveCoverLetter = async (req: AuthRequest, res: Response) => {
   try {
     const { resumeId, jobDescription, tone, content } = req.body as { resumeId?: string; jobDescription?: string; tone?: CoverLetterTone; content?: string };
-    if (!resumeId || !jobDescription?.trim() || !content?.trim() || !tone || !tones.includes(tone)) return res.status(400).json({ error: 'Resume, job description, tone, and content are required' });
-    const resume = await validateResume(resumeId, req.user!.id);
-    if (!resume) return res.status(404).json({ error: 'Resume analysis not found' });
-    const letter = await CoverLetter.create({ userId: req.user!.id, resumeId, jobDescription: jobDescription.trim(), tone, content: content.trim() });
+    if (!jobDescription?.trim() || !content?.trim() || !tone || !tones.includes(tone)) return res.status(400).json({ error: 'Job description, tone, and content are required' });
+    if (resumeId && !await validateResume(resumeId, req.user!.id)) return res.status(404).json({ error: 'Resume analysis not found' });
+    const letter = await CoverLetter.create({ userId: req.user!.id, ...(resumeId ? { resumeId } : {}), jobDescription: jobDescription.trim(), tone, content: content.trim() });
     return res.status(201).json(letter);
   } catch (error) {
     console.error('Cover-letter save failed:', error);
     return res.status(500).json({ error: 'Failed to save cover letter' });
+  }
+};
+
+export const updateCoverLetter = async (req: AuthRequest, res: Response) => {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid cover letter ID' });
+    const { content, tone } = req.body as { content?: string; tone?: CoverLetterTone };
+    if (!content?.trim() || !tone || !tones.includes(tone)) return res.status(400).json({ error: 'Valid tone and content are required' });
+    const letter = await CoverLetter.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user!.id },
+      { content: content.trim(), tone },
+      { new: true, runValidators: true },
+    ).lean();
+    return letter ? res.status(200).json(letter) : res.status(404).json({ error: 'Cover letter not found' });
+  } catch (error) {
+    console.error('Cover-letter update failed:', error);
+    return res.status(500).json({ error: 'Failed to update cover letter' });
   }
 };
 
