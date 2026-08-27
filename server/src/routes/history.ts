@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import ResumeAnalysis from '../models/ResumeAnalysis';
+import { requireAuth } from '../middleware/authMiddleware';
+import { AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', async (_req, res) => {
+router.get('/', requireAuth, async (req: AuthRequest, res) => {
   try {
-    const history = await ResumeAnalysis.find()
+    const history = await ResumeAnalysis.find({ userId: req.user!.id })
       .sort({ createdAt: -1 })
       .limit(50)
       .lean();

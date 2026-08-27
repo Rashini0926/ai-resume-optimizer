@@ -1,9 +1,13 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import AnalyticsEvent, { AnalyticsEventAttrs } from '../models/AnalyticsEvent';
+import { AuthRequest } from '../middleware/auth';
 
-export const analyticsSummary = async (req: Request, res: Response): Promise<Response> => {
+export const analyticsSummary = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const stats = await AnalyticsEvent.aggregate([
+      {
+        $match: { userId: req.user!.id },
+      },
       {
         $group: {
           _id: '$eventType',
@@ -28,9 +32,12 @@ export const analyticsSummary = async (req: Request, res: Response): Promise<Res
   }
 };
 
-export const analyticsTrends = async (req: Request, res: Response): Promise<Response> => {
+export const analyticsTrends = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const events = await AnalyticsEvent.aggregate([
+      {
+        $match: { userId: req.user!.id },
+      },
       {
         $sort: { createdAt: 1 },
       },
@@ -64,12 +71,16 @@ export const analyticsTrends = async (req: Request, res: Response): Promise<Resp
   }
 };
 
-export const analyticsByUser = async (req: Request, res: Response): Promise<Response> => {
+export const analyticsByUser = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     const { userId } = req.params;
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    if (userId !== req.user!.id) {
+      return res.status(403).json({ error: 'You can only access your own analytics' });
     }
 
     const events = await AnalyticsEvent.find({ userId }).sort({ createdAt: -1 }).lean();

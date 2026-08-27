@@ -3,24 +3,22 @@ import app from './app';
 import connectMongo from './config/database';
 
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI =
-  process.env.MONGODB_URI || 'mongodb://localhost:27017/ai-resume-optimizer';
+const MONGODB_URI = process.env.MONGODB_URI;
 
 const startServer = async (): Promise<void> => {
-  try {
-    console.log('Mongo URI:', MONGODB_URI);
-
-    await connectMongo(MONGODB_URI);
-
-    console.log('MongoDB connected successfully');
-  } catch (error) {
-    console.error('Failed to connect to MongoDB:', error);
-    console.warn('Server starting without active MongoDB connection.');
+  if (!MONGODB_URI) {
+    throw new Error('MONGODB_URI is required. Add it to server/.env before starting the server.');
   }
+
+  await connectMongo(MONGODB_URI);
+  console.log('MongoDB connected successfully');
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });
 };
 
-startServer();
+startServer().catch((error: unknown) => {
+  console.error('Server startup failed: MongoDB is unavailable.', error instanceof Error ? error.message : error);
+  process.exit(1);
+});

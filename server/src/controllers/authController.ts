@@ -1,29 +1,27 @@
 import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
 import User from '../models/User';
-
-const generateToken = (id: string): string => {
-  return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-    expiresIn: '7d',
-  });
-};
+import { generateToken } from '../utils/jwt';
+import { AuthRequest } from '../middleware/auth';
 
 // @desc  Register new user
 // @route POST /api/auth/register
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
 
-    if (!name || !email || !password) {
+    if (!name?.trim() || !email?.trim() || !password || !confirmPassword) {
       return res.status(400).json({ error: 'All fields are required' });
     }
+    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
+    if (password !== confirmPassword) return res.status(400).json({ error: 'Passwords do not match' });
 
-    const existingUser = await User.findOne({ email });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const user = await User.create({ name, email, password });
+    const user = await User.create({ name: name.trim(), email: normalizedEmail, password });
     const token = generateToken(user._id.toString());
 
     res.status(201).json({
@@ -50,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -75,3 +73,6 @@ export const login = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Login failed' });
   }
 };
+
+export const getCurrentUser = (req: AuthRequest, res: Response) =>
+  req.user ? res.status(200).json({ user: req.user }) : res.status(401).json({ error: 'Authentication is required' });

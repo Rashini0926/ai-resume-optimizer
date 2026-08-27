@@ -1,0 +1,2 @@
+import { Router } from 'express'; import { requireAuth } from '../middleware/authMiddleware'; import { deleteCoverLetter, generateCoverLetter, getCoverLetterById, getCoverLetters, saveCoverLetter } from '../controllers/coverLetterController';
+const router = Router(); router.use(requireAuth); router.post('/generate', generateCoverLetter); router.post('/save', saveCoverLetter); router.get('/', getCoverLetters); router.get('/:id', getCoverLetterById); router.delete('/:id', deleteCoverLetter); export default router;

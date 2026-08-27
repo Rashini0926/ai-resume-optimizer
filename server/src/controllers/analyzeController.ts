@@ -1,7 +1,9 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { genAI } from '../config/gemini';
 import { AnalyzeRequestBody, GeminiResult } from '../config/types';
 import ResumeAnalysis from '../models/ResumeAnalysis';
+import { AuthRequest } from '../middleware/auth';
+import { createAnalyticsEvent } from './analyticsController';
 
 const parseGeminiResponse = (text: string): GeminiResult => {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -22,7 +24,7 @@ const parseGeminiResponse = (text: string): GeminiResult => {
   return parsed;
 };
 
-export const analyzeResume = async (req: Request, res: Response): Promise<Response> => {
+export const analyzeResume = async (req: AuthRequest, res: Response): Promise<Response> => {
   try {
     if (!process.env.GEMINI_API_KEY) {
       return res.status(500).json({ error: 'GEMINI_API_KEY is not configured on the server' });
@@ -31,12 +33,11 @@ export const analyzeResume = async (req: Request, res: Response): Promise<Respon
     const {
       resumeText,
       jobDescription,
-      userId = 'anonymous',
       industry = 'General',
       jobRole = 'General',
     } = req.body as AnalyzeRequestBody;
 
-    if (!resumeText || !jobDescription) {
+    if (!req.user || !resumeText || !jobDescription) {
       return res.status(400).json({
         error: 'resumeText and jobDescription are required',
       });
@@ -69,7 +70,7 @@ ${jobDescription}`;
 
     try {
       const savedAnalysis = await ResumeAnalysis.create({
-        userId,
+        userId: req.user.id,
         industry,
         jobRole,
         atsScore: result.atsScore,
@@ -78,6 +79,23 @@ ${jobDescription}`;
         suggestions: result.suggestions,
       });
       console.info(`Resume analysis saved: ${savedAnalysis.id}`);
+
+      try {
+        await createAnalyticsEvent({
+          userId: req.user.id,
+          eventType: 'resume_analysis',
+          industry,
+          jobRole,
+          atsScore: result.atsScore,
+          matchedKeywords: result.matchedKeywords,
+          missingKeywords: result.missingKeywords,
+          suggestions: result.suggestions,
+        });
+      } catch (analyticsError) {
+        // Analytics is secondary to the user's saved analysis. A telemetry
+        // failure must not encourage a retry that would duplicate history.
+        console.error('Failed to record resume analytics event:', analyticsError);
+      }
     } catch (saveError) {
       // A successful analysis must not be presented as saved when persistence fails.
       console.error('Failed to save resume analysis:', saveError);
