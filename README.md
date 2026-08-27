@@ -413,17 +413,13 @@ The Power BI report can be connected to MongoDB Atlas through the MongoDB Atlas 
 
 #### Power BI Overview
 
-![Power BI dashboard overview](docs/screenshots/powerbi-dashboard-overview.png)
+<img width="1837" height="902" alt="Screenshot 2026-08-27 183855" src="https://github.com/user-attachments/assets/86ec50b2-5fc8-47de-9190-3fcc68b0e7ef" />
+<img width="1826" height="898" alt="Screenshot 2026-08-27 183909" src="https://github.com/user-attachments/assets/4566c763-9b25-4881-b3a1-4e0269fd6acf" />
+<img width="1797" height="896" alt="Screenshot 2026-08-27 183922" src="https://github.com/user-attachments/assets/b77cb954-4a76-49e6-bd15-47500ecfc79a" />
 
-#### ATS Score Trends
 
-![Power BI ATS score trends](docs/screenshots/powerbi-ats-trends.png)
 
-#### Keyword and Job Role Analysis
 
-![Power BI keyword and job role analysis](docs/screenshots/powerbi-keyword-analysis.png)
-
-Add the exported Power BI screenshots to `docs/screenshots/` using the exact filenames shown above. Do not include connection strings, account details, email addresses, or other sensitive information in screenshots.
 
 ## Power BI Security Notes
 
