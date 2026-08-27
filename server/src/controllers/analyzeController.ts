@@ -37,7 +37,7 @@ export const analyzeResume = async (req: AuthRequest, res: Response): Promise<Re
       jobRole = 'General',
     } = req.body as AnalyzeRequestBody;
 
-    if (!req.user || !resumeText || !jobDescription) {
+    if (!resumeText || !jobDescription) {
       return res.status(400).json({
         error: 'resumeText and jobDescription are required',
       });
@@ -68,7 +68,7 @@ ${jobDescription}`;
     const rawText = response.text ?? '';
     const result = parseGeminiResponse(rawText);
 
-    try {
+    if (req.user) try {
       const savedAnalysis = await ResumeAnalysis.create({
         userId: req.user.id,
         industry,

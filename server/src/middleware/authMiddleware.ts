@@ -13,3 +13,9 @@ export const requireAuth = async (req: AuthRequest, res: Response, next: NextFun
     return next();
   } catch { return res.status(401).json({ error: 'Invalid or expired authentication token' }); }
 };
+
+export const optionalAuth = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const value = req.headers.authorization;
+  if (!value) return next();
+  return requireAuth(req, res, next);
+};

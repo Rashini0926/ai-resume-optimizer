@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { analyzeResume } from '../controllers/analyzeController';
-import { requireAuth } from '../middleware/authMiddleware';
+import { optionalAuth } from '../middleware/authMiddleware';
 
 const router = Router();
 
-router.post('/', requireAuth, analyzeResume);
+router.post('/', optionalAuth, analyzeResume);
 
 export default router;
