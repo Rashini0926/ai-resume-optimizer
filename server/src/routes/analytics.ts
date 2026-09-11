@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { analyticsSummary, analyticsTrends, analyticsByUser } from '../controllers/analyticsController';
-import { requireAuth } from '../middleware/authMiddleware';
+import { requireAdmin, requireAuth } from '../middleware/authMiddleware';
 
 const router = Router();
 router.use(requireAuth);
+router.use(requireAdmin);
 
 router.get('/summary', analyticsSummary);
 router.get('/trends', analyticsTrends);

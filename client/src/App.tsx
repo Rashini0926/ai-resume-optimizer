@@ -11,6 +11,7 @@ import Register from './pages/Register';
 import Analytics from './pages/Analytics';
 import CoverLetters from './pages/CoverLetters';
 import ProtectedRoute from './components/ProtectedRoute';
+import AdminRoute from './components/AdminRoute';
 import type { AnalysisResult } from './types';
 import './App.css';
 
@@ -109,7 +110,7 @@ function Dashboard() {
       <p className="eyebrow">Career intelligence</p><h1>AI Resume Optimizer</h1>
       <p className="subtitle">{currentUser ? `Welcome, ${currentUser.name}.` : 'Analyze your resume without creating an account.'} Improve your application with AI insights.</p>
     </div><div className="header-actions">
-      {isAuthenticated ? <><button className="text-button" onClick={() => navigate('/cover-letters')}>Cover Letters</button><button className="text-button" onClick={() => navigate('/analytics')}>My Analytics</button><button className="dashboard-button" onClick={() => window.open('https://app.powerbi.com/groups/me/reports/feafa6e8-6775-4ace-995b-658c6d55b6cb/1626fb51c9a4e8bdc383?experience=power-bi', '_blank', 'noopener,noreferrer')}>Power BI Dashboard</button><button className="text-button" onClick={() => { logout(); navigate('/dashboard'); }}>Log out</button></> : <button className="text-button" onClick={() => navigate('/login')}>Sign in</button>}
+      {isAuthenticated ? <><button className="text-button" onClick={() => navigate('/cover-letters')}>Cover Letters</button>{currentUser?.role === 'admin' && <><button className="text-button" onClick={() => navigate('/analytics')}>Analytics</button><button className="dashboard-button" onClick={() => window.open('https://app.powerbi.com/groups/me/reports/feafa6e8-6775-4ace-995b-658c6d55b6cb/1626fb51c9a4e8bdc383?experience=power-bi', '_blank', 'noopener,noreferrer')}>Power BI Dashboard</button></>}<button className="text-button" onClick={() => { logout(); navigate('/dashboard'); }}>Log out</button></> : <button className="text-button" onClick={() => navigate('/login')}>Sign in</button>}
     </div></header>
     {!result && <AnalyzeForm onSubmit={analyze} isLoading={isLoading} />}
     {error && <div className="error-message">{error}</div>}
@@ -129,9 +130,9 @@ export default function App() {
     <Route path="/dashboard" element={<Dashboard />} />
     <Route path="/history" element={<Dashboard />} />
     <Route element={<ProtectedRoute />}>
-      <Route path="/analytics" element={<Analytics />} />
       <Route path="/cover-letters" element={<CoverLetters />} />
     </Route>
+    <Route element={<ProtectedRoute />}><Route element={<AdminRoute />}><Route path="/analytics" element={<Analytics />} /></Route></Route>
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="*" element={<Navigate to="/dashboard" replace />} />

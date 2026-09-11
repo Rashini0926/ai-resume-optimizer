@@ -3,6 +3,16 @@ import User from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
 
+const isConfiguredAdmin = (email: string) =>
+  email === process.env.ADMIN_EMAIL?.trim().toLowerCase();
+
+const publicUser = (user: { _id: unknown; name: string; email: string; role: 'user' | 'admin' }) => ({
+  id: user._id,
+  name: user.name,
+  email: user.email,
+  role: user.role,
+});
+
 // @desc  Register new user
 // @route POST /api/auth/register
 export const register = async (req: Request, res: Response) => {
@@ -21,16 +31,15 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const user = await User.create({ name: name.trim(), email: normalizedEmail, password });
+    const user = await User.create({
+      name: name.trim(), email: normalizedEmail, password,
+      role: isConfiguredAdmin(normalizedEmail) ? 'admin' : 'user',
+    });
     const token = generateToken(user._id.toString());
 
     res.status(201).json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: publicUser(user),
     });
   } catch (error) {
     console.error('Register error:', error);
@@ -58,15 +67,17 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Lets the configured administrator claim the admin role for an existing account.
+    if (isConfiguredAdmin(user.email) && user.role !== 'admin') {
+      user.role = 'admin';
+      await user.save();
+    }
+
     const token = generateToken(user._id.toString());
 
     res.status(200).json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      user: publicUser(user),
     });
   } catch (error) {
     console.error('Login error:', error);

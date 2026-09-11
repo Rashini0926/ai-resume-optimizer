@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect, react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-export interface AuthUser { id: string; name: string; email: string; }
+export interface AuthUser { id: string; name: string; email: string; role: 'user' | 'admin'; }
 interface AuthContextValue { currentUser: AuthUser | null; token: string | null; isAuthenticated: boolean; isLoading: boolean; login: (email: string, password: string) => Promise<void>; register: (name: string, email: string, password: string, confirmPassword: string) => Promise<void>; logout: () => void; }
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const request = async (path: string, body: object) => { const response = await fetch(`${API_URL}/api/auth/${path}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); const data = await response.json(); if (!response.ok) throw new Error(data.error || 'Authentication request failed'); return data as { token: string; user: AuthUser }; };
