@@ -3,6 +3,13 @@ import User from '../models/User';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middleware/auth';
 
+const isDatabaseUnavailable = (error: unknown) =>
+  error instanceof Error && (
+    error.name === 'MongooseServerSelectionError' ||
+    error.message.includes('buffering timed out') ||
+    error.message.includes('before initial connection is complete')
+  );
+
 const isConfiguredAdmin = (email: string) =>
   email === process.env.ADMIN_EMAIL?.trim().toLowerCase();
 
@@ -43,7 +50,13 @@ export const register = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({ error: 'Registration failed' });
+    if (isDatabaseUnavailable(error)) {
+      return res.status(503).json({ error: 'Database is unavailable. Allow your current IP in MongoDB Atlas and try again.' });
+    }
+    if ((error as { code?: number }).code === 11000) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+    return res.status(500).json({ error: 'Registration failed' });
   }
 };
 
@@ -81,7 +94,10 @@ export const login = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ error: 'Login failed' });
+    if (isDatabaseUnavailable(error)) {
+      return res.status(503).json({ error: 'Database is unavailable. Allow your current IP in MongoDB Atlas and try again.' });
+    }
+    return res.status(500).json({ error: 'Login failed' });
   }
 };
 
