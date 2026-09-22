@@ -2,16 +2,18 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import AnalyzeForm from './components/AnalyzeForm';
+import AppNavigation from './components/AppNavigation';
 import CoverLetterGenerator from './components/CoverLetterGenerator';
-import HistoryTable, { type HistoryItem } from './components/HistoryTable';
 import ResultCard from './components/ResultCard';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Analytics from './pages/Analytics';
 import CoverLetters from './pages/CoverLetters';
+import History from './pages/History';
 import ProtectedRoute from './components/ProtectedRoute';
 import AdminRoute from './components/AdminRoute';
+import PublicRoute from './components/PublicRoute';
 import type { AnalysisResult } from './types';
 import './App.css';
 
@@ -31,7 +33,7 @@ const readPendingAnalysis = (): PendingAnalysis | null => {
 };
 
 function Dashboard() {
-  const { token, currentUser, isAuthenticated, logout } = useAuth();
+  const { token, currentUser, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const pending = readPendingAnalysis();
   const [result, setResult] = useState<AnalysisResult | null>(pending?.result ?? null);
@@ -41,19 +43,6 @@ function Dashboard() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [history, setHistory] = useState<HistoryItem[]>([]);
-
-  const loadHistory = async () => {
-    if (!token) return;
-    const response = await fetch(`${API_URL}/api/history`, { headers: { Authorization: `Bearer ${token}` } });
-    const data = await response.json() as HistoryItem[] | { error?: string };
-    if (!response.ok) throw new Error(!Array.isArray(data) ? data.error : 'Unable to load history');
-    setHistory(data as HistoryItem[]);
-  };
-
-  useEffect(() => {
-    if (token) void loadHistory().catch((err) => setError(err instanceof Error ? err.message : 'Unable to load history'));
-  }, [token]);
 
   useEffect(() => {
     if (isAuthenticated && sessionStorage.getItem(COVER_LETTER_INTENT_KEY) === 'true' && result) {
@@ -80,7 +69,6 @@ function Dashboard() {
       setResult(nextResult);
       setJobDescription(targetJobDescription);
       sessionStorage.setItem(PENDING_ANALYSIS_KEY, JSON.stringify({ result: nextResult, jobDescription: targetJobDescription }));
-      if (token) await loadHistory();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Analysis failed');
     } finally {
@@ -105,13 +93,17 @@ function Dashboard() {
     sessionStorage.removeItem(COVER_LETTER_INTENT_KEY);
   };
 
+  const currentStep = showCoverLetter ? 3 : result ? 2 : 1;
+
   return <main className="app-shell"><div className="dashboard-container">
-    <header className="app-header"><div>
-      <p className="eyebrow">Career intelligence</p><h1>AI Resume Optimizer</h1>
-      <p className="subtitle">{currentUser ? `Welcome, ${currentUser.name}.` : 'Analyze your resume without creating an account.'} Improve your application with AI insights.</p>
-    </div><div className="header-actions">
-      {isAuthenticated ? <><button className="text-button" onClick={() => navigate('/cover-letters')}>Cover Letters</button>{currentUser?.role === 'admin' && <><button className="text-button" onClick={() => navigate('/analytics')}>Analytics</button><button className="dashboard-button" onClick={() => window.open('https://app.powerbi.com/groups/me/reports/feafa6e8-6775-4ace-995b-658c6d55b6cb/1626fb51c9a4e8bdc383?experience=power-bi', '_blank', 'noopener,noreferrer')}>Power BI Dashboard</button></>}<button className="text-button" onClick={() => { logout(); navigate('/dashboard'); }}>Log out</button></> : <button className="text-button" onClick={() => navigate('/login')}>Sign in</button>}
-    </div></header>
+    <AppNavigation />
+    <header className="page-heading dashboard-heading"><div>
+      <p className="eyebrow">Career intelligence</p><h1>Build a stronger application</h1>
+      <p className="subtitle">{currentUser ? `Welcome back, ${currentUser.name}.` : 'No account required to get started.'} Compare your resume with a role, close skill gaps, and create a tailored cover letter.</p>
+    </div><div className="trust-note"><strong>Private by design</strong><span>{isAuthenticated ? 'Your signed-in analyses are saved securely.' : 'Guest analyses stay in this browser session.'}</span></div></header>
+    <ol className="workflow-steps" aria-label="Application workflow">
+      {['Analyze resume', 'Review insights', 'Create cover letter'].map((label, index) => <li key={label} className={currentStep > index ? 'active' : ''}><span>{index + 1}</span>{label}</li>)}
+    </ol>
     {!result && <AnalyzeForm onSubmit={analyze} isLoading={isLoading} />}
     {error && <div className="error-message">{error}</div>}
     {result && <section className="results-section">
@@ -120,7 +112,7 @@ function Dashboard() {
       {!showCoverLetter && <div className="cover-letter-cta"><div><h2>Ready for your cover letter?</h2><p>{isAuthenticated ? 'Generate a personalized letter from these results.' : 'Sign in only when you are ready to generate it.'}</p></div><button className="analyze-button" onClick={requestCoverLetter}>Generate Cover Letter</button></div>}
       {showCoverLetter && token && <CoverLetterGenerator analysis={result} jobDescription={jobDescription} token={token} />}
     </section>}
-    {isAuthenticated && <HistoryTable items={history} />}
+    {!isAuthenticated && !result && <aside className="guest-callout"><div><strong>Want to keep your progress?</strong><span>Create a free account to save analyses, generate cover letters, and access your history.</span></div><button type="button" className="text-button" onClick={() => navigate('/register')}>Create account →</button></aside>}
   </div></main>;
 }
 
@@ -128,13 +120,15 @@ export default function App() {
   return <AuthProvider><BrowserRouter><Routes>
     <Route path="/" element={<Navigate to="/dashboard" replace />} />
     <Route path="/dashboard" element={<Dashboard />} />
-    <Route path="/history" element={<Dashboard />} />
     <Route element={<ProtectedRoute />}>
+      <Route path="/history" element={<History />} />
       <Route path="/cover-letters" element={<CoverLetters />} />
     </Route>
     <Route element={<ProtectedRoute />}><Route element={<AdminRoute />}><Route path="/analytics" element={<Analytics />} /></Route></Route>
-    <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<Register />} />
+    <Route element={<PublicRoute />}>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+    </Route>
     <Route path="*" element={<Navigate to="/dashboard" replace />} />
   </Routes></BrowserRouter></AuthProvider>;
 }

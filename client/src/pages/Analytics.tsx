@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AppNavigation from '../components/AppNavigation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
@@ -52,11 +52,12 @@ export default function Analytics() {
   }, [summary, trends]);
 
   return <main className="app-shell"><div className="dashboard-container">
-    <header className="app-header"><div>
+    <AppNavigation />
+    <header className="page-heading"><div>
       <p className="eyebrow">Personal analytics</p>
       <h1>Your progress</h1>
       <p className="subtitle">Track how {currentUser?.name ?? 'your'} resume alignment changes over time.</p>
-    </div><Link className="back-link" to="/dashboard">← Back to optimizer</Link></header>
+    </div></header>
 
     {isLoading && <div className="analytics-state">Loading your analytics…</div>}
     {error && <div className="error-message">{error}</div>}

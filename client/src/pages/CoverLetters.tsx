@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import AppNavigation from '../components/AppNavigation';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 const tones = ['Professional', 'Enthusiastic', 'Formal', 'Friendly'] as const;
@@ -109,7 +110,8 @@ export default function CoverLetters() {
   };
 
   return <main className="app-shell"><div className="dashboard-container">
-    <header className="app-header"><div><p className="eyebrow">Application library</p><h1>Saved cover letters</h1><p className="subtitle">Review, edit, export, and manage your generated letters.</p></div><Link className="back-link" to="/dashboard">← Back to optimizer</Link></header>
+    <AppNavigation />
+    <header className="page-heading"><div><p className="eyebrow">Application library</p><h1>Saved cover letters</h1><p className="subtitle">Review, edit, export, and manage your generated letters.</p></div></header>
     {error && <div className="error-message">{error}</div>}
     {notice && <div className="success-message">{notice}</div>}
     {isLoading ? <div className="analytics-state">Loading your cover letters…</div> : letters.length ? <div className="letter-library">
